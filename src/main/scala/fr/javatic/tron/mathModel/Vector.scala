@@ -1,19 +1,32 @@
 package fr.javatic.tron.mathModel
 
 import java.awt.Graphics2D
-import fr.javatic.tron.{Drawable, Direction}
+import fr.javatic.tron.Drawable
 import scala.util.Try
 
-case class Vector(val origin: Point, val length: Int, val direction: Direction.Value) extends Drawable {
-  val end: Point = direction match {
-    case Direction.Up => Point(origin.x, origin.y + length)
-    case Direction.Down => Point(origin.x, origin.y - length)
-    case Direction.Left => Point(origin.x - length, origin.y)
-    case Direction.Right => Point(origin.x + length, origin.y)
+case class Vector(val origin: Point, val length: Int, val angle: Double) extends Drawable {
+  val end: Point = {
+    Point(origin.x + projectionX.toInt, origin.y + projectionY.toInt)
+  }
+
+  def projectionX = {
+    math.cos(angle) * length
+  }
+
+  def projectionY = {
+    math.sin(angle) * length
   }
 
   def draw(g: Graphics2D) = {
     g.drawLine(origin.x, origin.y, end.x, end.y)
+  }
+
+  def phi(v: Vector) = {
+
+  }
+
+  def scalaProduct(p: Point) = {
+
   }
 
   // Paul Bourke algorithm : http://paulbourke.net/geometry/pointlineplane/
@@ -29,43 +42,22 @@ case class Vector(val origin: Point, val length: Int, val direction: Direction.V
     }
   }
 
+  // TODO : Trop procedural ?
   def intersectVector(that: Vector): Option[List[Point]] = {
-    implicit def doubleToRangeCheck(v: Double) = new RangeCheck(v)
+    val lineIntersection = new PaulBourkeLineIntersectionEquationSystem(this, that)
 
-    val p1 = origin
-    val p2 = end
-    val p3 = that.origin
-    val p4 = that.end
-
-    val denominator = (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y)
-    val uaNumerator = (p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)
-    val ubNumerator = (p2.x - p1.x) * (p1.x - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)
-
-    val parrallelLine = denominator == 0
-    val coincidentLine = parrallelLine && (uaNumerator == 0) && (ubNumerator == 0)
-
-    if (coincidentLine) {
+    if (lineIntersection.areCoincident) {
       return oneDimensionIntersect(that);
     }
 
-    if (parrallelLine) {
+    if (lineIntersection.areParallel) {
       return None
     }
 
-    val ua = uaNumerator.toDouble / denominator
-    if (!(ua in(0, 1))) {
-      return None
+    lineIntersection.segmentIntersectionPoint match {
+      case None => None
+      case s: Some[Point] => Some(List(s.get))
     }
-
-    val ub = ubNumerator.toDouble / denominator
-    if (!(ub in(0, 1))) {
-      return None
-    }
-
-    val ix = p1.x + ua * (p2.x - p1.x)
-    val iy = p1.y + ua * (p2.y - p1.y)
-
-    Some(List(Point(ix.toInt, iy.toInt)))
   }
 
   private def oneDimensionIntersect(b: Vector): Option[List[Point]] = {
@@ -162,4 +154,52 @@ case class Vector(val origin: Point, val length: Int, val direction: Direction.V
       }
     }
   }
+
+  // @see http://paulbourke.net/geometry/pointlineplane/
+  // val name conformly to the bourke article for easier comparison 
+  private class PaulBourkeLineIntersectionEquationSystem(val a: Vector, val b: Vector) {
+    implicit def doubleToRangeCheck(v: Double) = new RangeCheck(v)
+
+    private val p1 = a.origin
+    private val p2 = a.end
+    private val p3 = b.origin
+    private val p4 = b.end
+
+    private val denominator = (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y)
+    private val uaNumerator = (p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)
+    private val ubNumerator = (p2.x - p1.x) * (p1.x - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)
+
+    val areParallel = denominator == 0
+    val areCoincident = (denominator == 0) && (uaNumerator == 0) && (ubNumerator == 0)
+
+    private val uab = if (areParallel) None else Some((uaNumerator.toDouble / denominator, ubNumerator.toDouble / denominator))
+
+    val lineIntersectionPoint = uab map {
+      case (ua, ub) =>
+        val intersectionX = origin.x + ua * (end.x - origin.x)
+        val intersectionY = origin.y + ua * (end.y - origin.y)
+
+        Point(intersectionX.toInt, intersectionY.toInt)
+    }
+
+
+    // TODO : repetifi, surement une factorisation possible
+    val aSegmentIntersectBLine = uab.getOrElse(false) match {
+      case (ua: Double, _) => ua in(0, 1, RangeCheckMode.Inclusive)
+      case b: Boolean => b
+    }
+    val bSegmentIntersectALine = uab.getOrElse(false) match {
+      case (_, ub: Double) => ub in(0, 1, RangeCheckMode.Inclusive)
+      case b: Boolean => b
+    }
+
+    val segmentIntersectionPoint = {
+      if (aSegmentIntersectBLine && bSegmentIntersectALine) {
+        lineIntersectionPoint
+      } else {
+        None
+      }
+    }
+  }
+
 }

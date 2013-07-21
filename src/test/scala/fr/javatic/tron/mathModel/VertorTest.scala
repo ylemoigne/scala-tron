@@ -8,10 +8,10 @@ class VertorTest extends FunSpec {
 
   describe(s"A ${classUnderTest}") {
     val length = 10
-    val vectorUp = mathModel.Vector(Point(0, 0), length, Direction.Up)
-    val vectorDown = mathModel.Vector(Point(0, 0), length, Direction.Down)
-    val vectorLeft = mathModel.Vector(Point(0, 0), length, Direction.Left)
-    val vectorRight = mathModel.Vector(Point(0, 0), length, Direction.Right)
+    val vectorUp = mathModel.Vector(Point(0, 0), length, Direction.Up.angle)
+    val vectorDown = mathModel.Vector(Point(0, 0), length, Direction.Down.angle)
+    val vectorLeft = mathModel.Vector(Point(0, 0), length, Direction.Left.angle)
+    val vectorRight = mathModel.Vector(Point(0, 0), length, Direction.Right.angle)
 
     it("should has his end point equals on x when his direction is up") {
       assert(vectorUp.end.x === vectorUp.origin.x)
@@ -46,31 +46,31 @@ class VertorTest extends FunSpec {
     }
 
     {
-      val vectorA = Vector(Point(0, 0), 10, Direction.Up)
-      val vectorB = Vector(Point(1, 0), 10, Direction.Up)
+      val vectorA = Vector(Point(0, 0), 10, Direction.Up.angle)
+      val vectorB = Vector(Point(1, 0), 10, Direction.Up.angle)
       it(s"${vectorA.toString} should not intersect a ${classUnderTest} ${vectorB.toString}") {
         assert(vectorA.intersect(vectorB) === None)
       }
     }
 
     {
-      val vectorA = Vector(Point(0, 0), 10, Direction.Up)
-      val vectorB = Vector(Point(1, 5), 10, Direction.Right)
+      val vectorA = Vector(Point(0, 0), 10, Direction.Up.angle)
+      val vectorB = Vector(Point(1, 5), 10, Direction.Right.angle)
       it(s"${vectorA.toString} should not intersect a ${classUnderTest} ${vectorB.toString}") {
         assert(vectorA.intersect(vectorB) === None)
       }
     }
 
     {
-      val vectorA = Vector(Point(0, 0), 10, Direction.Up)
-      val vectorB = Vector(Point(11, 5), 10, Direction.Left)
+      val vectorA = Vector(Point(0, 0), 10, Direction.Up.angle)
+      val vectorB = Vector(Point(11, 5), 10, Direction.Left.angle)
       it(s"${vectorA.toString} should not intersect a ${classUnderTest} ${vectorB.toString}") {
         assert(vectorA.intersect(vectorB) === None)
       }
     }
 
     {
-      val vector = Vector(Point(0, 0), 10, Direction.Up)
+      val vector = Vector(Point(0, 0), 10, Direction.Up.angle)
       val p = Point(1, 5)
       it(s"${vector.toString} should not intersect a ${p.getClass.getSimpleName} ${p.toString}") {
         assert(vector.intersect(p) === None)
@@ -78,7 +78,7 @@ class VertorTest extends FunSpec {
     }
 
     {
-      val vector = Vector(Point(711, 253), 17, Direction.Down)
+      val vector = Vector(Point(711, 253), 17, Direction.Down.angle)
       val p = Point(711, 210)
       it(s"${vector.toString} should not intersect a ${p.getClass.getSimpleName} ${p.toString}") {
         assert(vector.intersect(p) === None)
@@ -86,8 +86,8 @@ class VertorTest extends FunSpec {
     }
 
     {
-      val vectorA = Vector(Point(0, -10), 10, Direction.Up)
-      val vectorB = Vector(Point(0, 0), 10, Direction.Up)
+      val vectorA = Vector(Point(0, -10), 10, Direction.Up.angle)
+      val vectorB = Vector(Point(0, 0), 10, Direction.Up.angle)
       val intersection = Point(0, 0)
       it(s"${vectorA.toString} should intersect a ${classUnderTest} ${vectorB.toString} at ${intersection.toString}") {
         assert(vectorA.intersect(vectorB) === Some(List(intersection)))

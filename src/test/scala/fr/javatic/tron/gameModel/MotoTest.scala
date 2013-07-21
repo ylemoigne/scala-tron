@@ -12,7 +12,7 @@ class MotoTest extends FunSpec with EasyMockSugar {
   trait Fixture {
     val position = Point(0, 0)
     val length = 10
-    val vector = Vector(position, length, Direction.Right)
+    val vector = Vector(position, length, Direction.Right.angle)
     val moto = new Moto(vector)
 
     val g2d = mock[Graphics2D]

@@ -16,7 +16,7 @@ class Arena(val width: Int, val height: Int, val players: List[Player], val rend
   private val playersMoto: Map[Player, Moto] = players.map(p => (p, createMoto(p.color))).toMap
 
   private def createMoto(c: Color) = {
-    new Moto(new Vector(Point.boundedRandom(width, height), 0, Direction.random)) with Colored {
+    new Moto(new Vector(Point.boundedRandom(width, height), 0, Direction.random.angle)) with Colored {
       color = c
     }
   }

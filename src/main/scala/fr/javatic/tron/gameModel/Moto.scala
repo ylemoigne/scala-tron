@@ -14,8 +14,8 @@ class Moto(var vector: mathModel.Vector) extends Drawable {
     paths.update(0, newVector)
   }
 
-  def turn(newDirection: Direction.Value): Unit = {
-    mathModel.Vector(Point(paths.head.end.x, paths.head.end.y), 0, newDirection) +=: paths
+  def turn(newDirection: Direction.DirectionValue): Unit = {
+    mathModel.Vector(Point(paths.head.end.x, paths.head.end.y), 0, newDirection.angle) +=: paths
   }
 
   def currentPosition = {
@@ -36,7 +36,7 @@ class Moto(var vector: mathModel.Vector) extends Drawable {
   }
 
   def teleport(position: Point): Unit = {
-    mathModel.Vector(position, 0, paths.head.direction) +=: paths
+    mathModel.Vector(position, 0, paths.head.angle) +=: paths
   }
 
   def draw(g: Graphics2D): Unit = {
