@@ -6,7 +6,7 @@ import fr.javatic.tron.{Direction, mathModel}
 class VertorTest extends FunSpec {
   val classUnderTest = classOf[Vector].getSimpleName
 
-  describe(s"A ${classUnderTest}") {
+  describe(s"A $classUnderTest") {
     val length = 10
     val vectorUp = mathModel.Vector(Point(0, 0), length, Direction.Up.angle)
     val vectorDown = mathModel.Vector(Point(0, 0), length, Direction.Down.angle)
@@ -48,7 +48,7 @@ class VertorTest extends FunSpec {
     {
       val vectorA = Vector(Point(0, 0), 10, Direction.Up.angle)
       val vectorB = Vector(Point(1, 0), 10, Direction.Up.angle)
-      it(s"${vectorA.toString} should not intersect a ${classUnderTest} ${vectorB.toString}") {
+      it(s"${vectorA.toString} should not intersect a $classUnderTest ${vectorB.toString}") {
         assert(vectorA.intersect(vectorB) === None)
       }
     }
@@ -56,7 +56,7 @@ class VertorTest extends FunSpec {
     {
       val vectorA = Vector(Point(0, 0), 10, Direction.Up.angle)
       val vectorB = Vector(Point(1, 5), 10, Direction.Right.angle)
-      it(s"${vectorA.toString} should not intersect a ${classUnderTest} ${vectorB.toString}") {
+      it(s"${vectorA.toString} should not intersect a $classUnderTest ${vectorB.toString}") {
         assert(vectorA.intersect(vectorB) === None)
       }
     }
@@ -64,7 +64,7 @@ class VertorTest extends FunSpec {
     {
       val vectorA = Vector(Point(0, 0), 10, Direction.Up.angle)
       val vectorB = Vector(Point(11, 5), 10, Direction.Left.angle)
-      it(s"${vectorA.toString} should not intersect a ${classUnderTest} ${vectorB.toString}") {
+      it(s"${vectorA.toString} should not intersect a $classUnderTest ${vectorB.toString}") {
         assert(vectorA.intersect(vectorB) === None)
       }
     }
@@ -89,7 +89,7 @@ class VertorTest extends FunSpec {
       val vectorA = Vector(Point(0, -10), 10, Direction.Up.angle)
       val vectorB = Vector(Point(0, 0), 10, Direction.Up.angle)
       val intersection = Point(0, 0)
-      it(s"${vectorA.toString} should intersect a ${classUnderTest} ${vectorB.toString} at ${intersection.toString}") {
+      it(s"${vectorA.toString} should intersect a $classUnderTest ${vectorB.toString} at ${intersection.toString}") {
         assert(vectorA.intersect(vectorB) === Some(List(intersection)))
       }
     }

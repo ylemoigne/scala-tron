@@ -16,18 +16,18 @@ class Canvas(val width: Int, val height: Int) extends Panel with Renderer {
   var motos: Iterable[Moto] = Nil
   var looser: Option[Player] = None
 
-  def render(motos: Iterable[Moto]) {
+  def render(motos: Iterable[Moto]): Unit = {
     this.motos = motos
     repaint()
   }
 
 
-  def displayLoser(player: Player) {
+  def displayLoser(player: Player): Unit = {
     looser = Some(player)
     repaint()
   }
 
-  override def paintComponent(g: Graphics2D) = {
+  override def paintComponent(g: Graphics2D): Unit = {
     super.paintComponent(g)
 
     if (looser.isDefined) {
@@ -38,7 +38,7 @@ class Canvas(val width: Int, val height: Int) extends Panel with Renderer {
     motos.foreach(_.draw(g))
   }
 
-  private def defineYFromBottomToUp(g: Graphics2D) = {
+  private def defineYFromBottomToUp(g: Graphics2D): Unit = {
     g.scale(1, -1)
     g.translate(0, -height)
   }

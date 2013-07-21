@@ -18,7 +18,7 @@ class MotoTest extends FunSpec with EasyMockSugar {
     val g2d = mock[Graphics2D]
   }
 
-  describe(s"A ${classUnderTest}") {
+  describe(s"A $classUnderTest") {
     it("sould draw a line from position to position's end point") {
       new Fixture {
         expecting {
@@ -32,7 +32,7 @@ class MotoTest extends FunSpec with EasyMockSugar {
     }
   }
 
-  describe(s"A ${classUnderTest} forwarded going right") {
+  describe(s"A $classUnderTest forwarded going right") {
     it("should draw a line from position to position's end point with x+1") {
       new Fixture {
         moto.forward()
@@ -48,7 +48,7 @@ class MotoTest extends FunSpec with EasyMockSugar {
     }
   }
 
-  describe(s"A ${classUnderTest} forwarded going right, then turning to up, then forwarded") {
+  describe(s"A $classUnderTest forwarded going right, then turning to up, then forwarded") {
     it("should draw a line from it's initial position to turn's point position, then another line from turn's point position to end point") {
       new Fixture {
         moto.forward()

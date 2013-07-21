@@ -1,33 +1,50 @@
+/*
+ * Copyright (c) 2013, Yann Le Moigne
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met: 
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer. 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution. 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package fr.javatic.tron.mathModel
 
 import java.awt.Graphics2D
 import fr.javatic.tron.Drawable
 import scala.util.Try
 
-case class Vector(val origin: Point, val length: Int, val angle: Double) extends Drawable {
-  val end: Point = {
-    Point(origin.x + projectionX.toInt, origin.y + projectionY.toInt)
-  }
+case class Vector(origin: Point, length: Int, angle: Double) extends Drawable {
+  val end: Point = Point(origin.x + projectionLengthOnX.toInt, origin.y + projectionLengthOnY.toInt)
 
-  def projectionX = {
-    math.cos(angle) * length
-  }
+  def projectionLengthOnX = math.cos(angle) * length
 
-  def projectionY = {
-    math.sin(angle) * length
-  }
+  def projectionLengthOnY = math.sin(angle) * length
 
-  def draw(g: Graphics2D) = {
+  def projectionOnX = Vector(Point(origin.x, 0), projectionLengthOnX.toInt, 0)
+
+  def projectionOnY = Vector(Point(0, origin.y), projectionLengthOnY.toInt, math.Pi / 2)
+
+  def draw(g: Graphics2D): Unit = {
     g.drawLine(origin.x, origin.y, end.x, end.y)
   }
 
-  def phi(v: Vector) = {
-
-  }
-
-  def scalaProduct(p: Point) = {
-
-  }
+  def dotProduct(p: Point) = (p.x - origin.x) * (end.x - origin.x) + (p.y - origin.y) * (end.y - origin.y)
 
   // Paul Bourke algorithm : http://paulbourke.net/geometry/pointlineplane/
   // Plus fix from http://stackoverflow.com/a/2255848/1016547 for coincident line and 1D intersection
@@ -42,21 +59,15 @@ case class Vector(val origin: Point, val length: Int, val angle: Double) extends
     }
   }
 
-  // TODO : Trop procedural ?
   def intersectVector(that: Vector): Option[List[Point]] = {
     val lineIntersection = new PaulBourkeLineIntersectionEquationSystem(this, that)
-
-    if (lineIntersection.areCoincident) {
-      return oneDimensionIntersect(that);
-    }
-
-    if (lineIntersection.areParallel) {
-      return None
-    }
-
-    lineIntersection.segmentIntersectionPoint match {
-      case None => None
-      case s: Some[Point] => Some(List(s.get))
+    lineIntersection.result match {
+      case Result.Coincident => oneDimensionIntersect(that)
+      case Result.Parallel => None
+      case Result.Other => lineIntersection.segmentIntersectionPoint match {
+        case None => None
+        case Some(s: Point) => Option(List(s))
+      }
     }
   }
 
@@ -66,15 +77,16 @@ case class Vector(val origin: Point, val length: Int, val angle: Double) extends
     val b1 = b.origin
     val b2 = b.end
 
-    val denomx = a2.x - a1.x
-    val denomy = a2.y - a1.y
+    val vA2A1 = Vector(a2, a1)
+    val denomx = vA2A1.projectionLengthOnX
+    val denomy = vA2A1.projectionLengthOnY
 
     val ub = if (denomx.abs > denomy.abs)
                ((b1.x - a1.x) / denomx, (b2.x - a1.x) / denomx)
              else
                ((b1.y - a1.y) / denomy, (b2.y - a1.y) / denomy)
 
-    val interval = overlapIntervals(ub._1, ub._2)
+    val interval = overlapIntervals(ub._1.toInt, ub._2.toInt)
 
     if (interval.isEmpty) {
       None
@@ -89,55 +101,22 @@ case class Vector(val origin: Point, val length: Int, val angle: Double) extends
   }
 
   private def overlapIntervals(ub1: Int, ub2: Int): List[Int] = {
-    val l = ub1 min ub2
-    val r = ub1 max ub2
-
-    val a = 0 max l
-    val b = 1 min r
+    val a = 0 max (ub1 min ub2)
+    val b = 1 min (ub1 max ub2)
 
     if (a > b) // no intersection
-      return Nil;
+      Nil
     else if (a == b)
-           return List(a);
+           List(a)
     else // if (A < B)
-      return List(a, b);
+      List(a, b)
   }
 
   def intersect(p: Point): Option[List[Point]] = {
-    if (isPoint) {
-      if (toPoint.get == p) {
-        return Some(List(p))
-      } else {
-        return None
-      }
-    }
-    // formula here:
-    //http://mathworld.wolfram.com/Point-LineDistance2-Dimensional.html
-    // where x0,y0 = p
-    //       x1,y1 = q0
-    //       x2,y2 = q1
-    val dx21 = end.x - origin.x
-    val dy21 = end.y - origin.y
-    val dx10 = origin.x - p.x
-    val dy10 = origin.y - p.y
-    val num = (dx21 * dy10 - dx10 * dy21).abs / length.toDouble
-
-
-    // TODO mais quel hoerreur, voir les crossproduct et dotproduct, renommer et refactoriser tout ça
-    val pointIsOnLine = num == 0
-    if (pointIsOnLine) {
-      val dotproduct = (p.x - origin.x) * (end.x - origin.x) + (p.y - origin.y) * (end.y - origin.y)
-      if (dotproduct < 0) {
-        return None
-      } else {
-        val squaredlengthba = length * length
-        if (dotproduct > squaredlengthba) {
-          return None
-        }
-      }
-      return Some(List(p))
+    if (p.isOnSegment(this)) {
+      Some(List(p))
     } else {
-      return None
+      None
     }
   }
 
@@ -150,7 +129,7 @@ case class Vector(val origin: Point, val length: Int, val angle: Double) extends
       if (isPoint) {
         origin
       } else {
-        throw new IllegalStateException("Origin != End, so this is not a Point")
+        throw new VectorIsNotAPointException(this)
       }
     }
   }
@@ -182,15 +161,18 @@ case class Vector(val origin: Point, val length: Int, val angle: Double) extends
         Point(intersectionX.toInt, intersectionY.toInt)
     }
 
-
-    // TODO : repetifi, surement une factorisation possible
-    val aSegmentIntersectBLine = uab.getOrElse(false) match {
-      case (ua: Double, _) => ua in(0, 1, RangeCheckMode.Inclusive)
-      case b: Boolean => b
+    val aSegmentIntersectBLine = uab match {
+      case Some(s) => s match {
+        case (ua: Double, _) => ua in(0, 1, RangeCheckMode.Inclusive)
+      }
+      case None => false
     }
-    val bSegmentIntersectALine = uab.getOrElse(false) match {
-      case (_, ub: Double) => ub in(0, 1, RangeCheckMode.Inclusive)
-      case b: Boolean => b
+
+    val bSegmentIntersectALine = uab match {
+      case Some(s) => s match {
+        case (_, ub: Double) => ub in(0, 1, RangeCheckMode.Inclusive)
+      }
+      case None => false
     }
 
     val segmentIntersectionPoint = {
@@ -200,6 +182,26 @@ case class Vector(val origin: Point, val length: Int, val angle: Double) extends
         None
       }
     }
+
+    val result = {
+      if (areCoincident) {
+        Result.Coincident
+      } else if (areParallel) {
+        Result.Parallel
+      } else {
+        Result.Other
+      }
+    }
   }
 
+  private object Result extends Enumeration {
+    val Coincident = Value
+    val Parallel = Value
+    val Other = Value
+  }
+
+}
+
+object Vector {
+  def apply(origin: Point, end: Point) = new Vector(origin, origin.distanceTo(end).toInt, end.angle)
 }
